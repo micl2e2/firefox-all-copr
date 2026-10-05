@@ -1,6 +1,6 @@
 
-# sources := /builddir/build/SOURCES
-sources := ~/rpmbuild/SOURCES
+# rpmbuild_sources := /builddir/build/SOURCES
+rpmbuild_sources ?= ~/rpmbuild/SOURCES
 after_tarball_inplace := after_tarball_inplace
 spec_template := firefox-xyz.spec.template
 launcher_template := $(after_tarball_inplace)/firefox-xyz.template
@@ -30,7 +30,7 @@ srpm_esr:
 	export EXPENV_OPTFOLDER=$(optfolder_esr) && cat $(launcher_template) | envsubst $(subst_launcher) > $(after_tarball_inplace)/$(optfolder_esr) # we assume launcher name is the same as opt subfolder name
 	export EXPENV_LAUNCHER=$(optfolder_esr) && export EXPENV_READABLE_NAME='$(readable_esr)' && cat $(desktop_template) | envsubst $(subst_desktop) > $(after_tarball_inplace)/$(optfolder_esr).desktop
 	tar --create --file $(after_tarball_inplace).tar $(after_tarball_inplace)
-	mv *.tar* $(sources)
+	mv *.tar* $(rpmbuild_sources)
 	export EXPENV_PACKAGE_NAME=$(optfolder_esr) && export EXPENV_PACKAGE_VERSION=$$(cat $(optfolder_esr).version) && export EXPENV_RELEASE_COUNT=$$(date +%y%m%d) && export EXPENV_PACKAGE_SUMMARY='$(summary_esr)' && cat $(spec_template) | envsubst $(subst_spec) > $(optfolder_esr).spec
 	rpmbuild -bs $(optfolder_esr).spec
 
@@ -39,7 +39,7 @@ srpm_devedition:
 	export EXPENV_OPTFOLDER=$(optfolder_devedition) && cat $(launcher_template) | envsubst $(subst_launcher) > $(after_tarball_inplace)/$(optfolder_devedition)
 	export EXPENV_LAUNCHER=$(optfolder_devedition) && export EXPENV_READABLE_NAME='$(readable_devedition)' && cat $(desktop_template) | envsubst $(subst_desktop) > $(after_tarball_inplace)/$(optfolder_devedition).desktop
 	tar --create --file $(after_tarball_inplace).tar $(after_tarball_inplace)
-	mv *.tar* $(sources)
+	mv *.tar* $(rpmbuild_sources)
 	export EXPENV_PACKAGE_NAME=$(optfolder_devedition) && export EXPENV_PACKAGE_VERSION=$$(cat $(optfolder_devedition).version) && export EXPENV_RELEASE_COUNT=$$(date +%y%m%d) && export EXPENV_PACKAGE_SUMMARY='$(summary_devedition)' && cat $(spec_template) | envsubst $(subst_spec) > $(optfolder_devedition).spec
 	rpmbuild -bs $(optfolder_devedition).spec
 
@@ -48,7 +48,7 @@ srpm_nightly:
 	export EXPENV_OPTFOLDER=$(optfolder_nightly) && cat $(launcher_template) | envsubst $(subst_launcher) > $(after_tarball_inplace)/$(optfolder_nightly)
 	export EXPENV_LAUNCHER=$(optfolder_nightly) && export EXPENV_READABLE_NAME='$(readable_nightly)' && cat $(desktop_template) | envsubst $(subst_desktop) > $(after_tarball_inplace)/$(optfolder_nightly).desktop
 	tar --create --file $(after_tarball_inplace).tar $(after_tarball_inplace)
-	mv *.tar* $(sources)
+	mv *.tar* $(rpmbuild_sources)
 	export EXPENV_PACKAGE_NAME=$(optfolder_nightly) && export EXPENV_PACKAGE_VERSION=$$(cat $(optfolder_nightly).version) && export EXPENV_RELEASE_COUNT=$$(date +%y%m%d) && export EXPENV_PACKAGE_SUMMARY='$(summary_nightly)' && cat $(spec_template) | envsubst $(subst_spec) > $(optfolder_nightly).spec
 	rpmbuild -bs $(optfolder_nightly).spec
 
