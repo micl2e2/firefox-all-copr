@@ -1,0 +1,2 @@
+# firefox-all-copr
+WIP
