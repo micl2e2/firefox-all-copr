@@ -1,2 +1,3 @@
 # firefox-all-copr
-WIP
+
+<TAKE_OVER>
