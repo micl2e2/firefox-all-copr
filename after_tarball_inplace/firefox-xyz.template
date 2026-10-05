@@ -1,0 +1,51 @@
+#!/usr/bin/bash
+
+native_messaging_home="${HOME}/.mozilla/native-messaging-hosts"
+native_messaging_lib="/usr/lib64/mozilla/native-messaging-hosts"
+kde_plasma_user_json="${native_messaging_home}/org.kde.plasma.browser_integration.json"
+kde_plasma_lib_json="${native_messaging_lib}/org.kde.plasma.browser_integration.json"
+gnome_connector_user_json="${native_messaging_home}/org.gnome.browser_connector.json"
+gnome_connector_lib_json="${native_messaging_lib}/org.gnome.browser_connector.json"
+gnome_shell_user_json="${native_messaging_home}/org.gnome.chrome_gnome_shell.json"
+gnome_shell_lib_json="${native_messaging_lib}/org.gnome.chrome_gnome_shell.json"
+
+if [[ -z "$MOZ_DISABLE_WAYLAND" ]]
+then
+    if [[ "$XDG_CURRENT_DESKTOP" = "GNOME" ]] && [[ -n "$WAYLAND_DISPLAY" ]] || [[ "$XDG_SESSION_TYPE" = "wayland" ]]
+    then
+        export MOZ_ENABLE_WAYLAND=1
+        export MOZ_DBUS_REMOTE=1
+    fi
+fi
+
+if [[ "$XDG_CURRENT_DESKTOP" = "KDE" ]]
+then
+    if [[ ! -e "$kde_plasma_user_json" ]]
+    then
+        mkdir -p "$native_messaging_home"
+        if [[ -r "$kde_plasma_lib_json" ]]
+        then
+            ln -s "$kde_plasma_lib_json" "$kde_plasma_user_json"
+        fi
+    fi
+fi
+
+if [[ "$XDG_CURRENT_DESKTOP" = "GNOME" ]]
+then
+    if [[ ! -e "$gnome_connector_user_json" ]] || [[ ! -e "$gnome_shell_user_json" ]]
+    then
+        mkdir -p "$native_messaging_home"
+        if [[ -r "$gnome_connector_lib_json" ]]
+        then
+            ln -s "$gnome_connector_lib_json" "$gnome_connector_user_json"
+        fi
+        if [[ -r "$gnome_shell_lib_json" ]]
+        then
+            ln -s "$gnome_shell_lib_json" "$gnome_shell_user_json"
+        fi
+    fi
+fi
+
+export MOZ_APP_LAUNCHER="$0"
+
+exec /opt/${EXPENV_OPTFOLDER}/firefox "$@"

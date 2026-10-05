@@ -1,0 +1,66 @@
+%global             debug_package %{nil}
+
+Name:               ${EXPENV_PACKAGE_NAME}
+Version:            ${EXPENV_PACKAGE_VERSION}
+Release:            ${EXPENV_RELEASE_COUNT}%{?dist}
+Summary:            ${EXPENV_PACKAGE_SUMMARY}
+%global             resource_after_tarball_inplace after_tarball_inplace
+
+License:            MPLv1.1 or GPLv2+ or LGPLv2+
+URL:                https://www.mozilla.org/en-US/firefox/
+Source0:            ${EXPENV_PACKAGE_NAME}-${EXPENV_PACKAGE_VERSION}.tar.xz
+Source1:            after_tarball_inplace.tar
+
+BuildRequires:      chrpath
+
+Requires(post):     gtk-update-icon-cache
+
+%description
+WIP
+
+%prep
+%setup -q -c -T -a 1
+
+%install
+%__rm -rf %{buildroot}
+
+%__install -d %{buildroot}/opt/%{name}
+%__install -d %{buildroot}%{_bindir}
+%__install -d %{buildroot}%{_datadir}/applications
+%__install -d %{buildroot}%{_datadir}/icons/hicolor/128x128/apps
+%__install -d %{buildroot}%{_datadir}/icons/hicolor/64x64/apps
+%__install -d %{buildroot}%{_datadir}/icons/hicolor/48x48/apps
+%__install -d %{buildroot}%{_datadir}/icons/hicolor/32x32/apps
+%__install -d %{buildroot}%{_datadir}/icons/hicolor/16x16/apps
+
+tar -xf %{SOURCE0}
+%__cp -r firefox/. %{buildroot}/opt/%{name}
+
+chrpath --delete %{buildroot}/opt/%{name}/libonnxruntime.so || :
+
+# GNOME specific
+%__install -D -m 0644 %{resource_after_tarball_inplace}/%{name}.desktop -t %{buildroot}%{_datadir}/applications
+%__install -D -m 0444 %{resource_after_tarball_inplace}/policies.json -t %{buildroot}/opt/%{name}/distribution
+%__install -D -m 0755 %{resource_after_tarball_inplace}/%{name} -t %{buildroot}%{_bindir}
+
+# -r stores a relative target, so %{buildroot} is not written into the link
+%__ln_s -r %{buildroot}/opt/%{name}/browser/chrome/icons/default/default128.png %{buildroot}%{_datadir}/icons/hicolor/128x128/apps/%{name}.png
+%__ln_s -r %{buildroot}/opt/%{name}/browser/chrome/icons/default/default64.png %{buildroot}%{_datadir}/icons/hicolor/64x64/apps/%{name}.png
+%__ln_s -r %{buildroot}/opt/%{name}/browser/chrome/icons/default/default48.png %{buildroot}%{_datadir}/icons/hicolor/48x48/apps/%{name}.png
+%__ln_s -r %{buildroot}/opt/%{name}/browser/chrome/icons/default/default32.png %{buildroot}%{_datadir}/icons/hicolor/32x32/apps/%{name}.png
+%__ln_s -r %{buildroot}/opt/%{name}/browser/chrome/icons/default/default16.png %{buildroot}%{_datadir}/icons/hicolor/16x16/apps/%{name}.png
+
+%post
+gtk-update-icon-cache -ftq %{_datadir}/icons/hicolor
+
+%files
+/opt/%{name}/
+%{_datadir}/applications/%{name}.desktop
+%{_datadir}/icons/hicolor/128x128/apps/%{name}.png
+%{_datadir}/icons/hicolor/64x64/apps/%{name}.png
+%{_datadir}/icons/hicolor/48x48/apps/%{name}.png
+%{_datadir}/icons/hicolor/32x32/apps/%{name}.png
+%{_datadir}/icons/hicolor/16x16/apps/%{name}.png
+%{_bindir}/%{name}
+
+%changelog
