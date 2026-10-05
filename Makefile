@@ -25,7 +25,7 @@ tarball_nightly := https://download-installer.cdn.mozilla.net/pub/firefox/nightl
 packages:
 	sudo dnf --quiet -y install git tree gcc
 
-srpm_esr: versions
+srpm_esr:
 	V_FF=$$(cat $(optfolder_esr).version); curl --location --silent $(tarball_esr) --output $(optfolder_esr)-$${V_FF}.tar.xz
 	export EXPENV_OPTFOLDER=$(optfolder_esr) && cat $(launcher_template) | envsubst $(subst_launcher) > $(after_tarball_inplace)/$(optfolder_esr) # we assume launcher name is the same as opt subfolder name
 	export EXPENV_LAUNCHER=$(optfolder_esr) && export EXPENV_READABLE_NAME='$(readable_esr)' && cat $(desktop_template) | envsubst $(subst_desktop) > $(after_tarball_inplace)/$(optfolder_esr).desktop
@@ -34,7 +34,7 @@ srpm_esr: versions
 	export EXPENV_PACKAGE_NAME=$(optfolder_esr) && export EXPENV_PACKAGE_VERSION=$$(cat $(optfolder_esr).version) && export EXPENV_RELEASE_COUNT=$$(date +%y%m%d) && export EXPENV_PACKAGE_SUMMARY='$(summary_esr)' && cat $(spec_template) | envsubst $(subst_spec) > $(optfolder_esr).spec
 	rpmbuild -bs $(optfolder_esr).spec
 
-srpm_devedition: versions
+srpm_devedition:
 	V_FF=$$(cat $(optfolder_devedition).version); curl --location --silent $(tarball_devedition) --output $(optfolder_devedition)-$${V_FF}.tar.xz
 	export EXPENV_OPTFOLDER=$(optfolder_devedition) && cat $(launcher_template) | envsubst $(subst_launcher) > $(after_tarball_inplace)/$(optfolder_devedition)
 	export EXPENV_LAUNCHER=$(optfolder_devedition) && export EXPENV_READABLE_NAME='$(readable_devedition)' && cat $(desktop_template) | envsubst $(subst_desktop) > $(after_tarball_inplace)/$(optfolder_devedition).desktop
@@ -43,7 +43,7 @@ srpm_devedition: versions
 	export EXPENV_PACKAGE_NAME=$(optfolder_devedition) && export EXPENV_PACKAGE_VERSION=$$(cat $(optfolder_devedition).version) && export EXPENV_RELEASE_COUNT=$$(date +%y%m%d) && export EXPENV_PACKAGE_SUMMARY='$(summary_devedition)' && cat $(spec_template) | envsubst $(subst_spec) > $(optfolder_devedition).spec
 	rpmbuild -bs $(optfolder_devedition).spec
 
-srpm_nightly: versions
+srpm_nightly:
 	V_FF=$$(cat $(optfolder_nightly).version); curl --location --silent $(tarball_nightly) --output $(optfolder_nightly)-$${V_FF}.tar.xz
 	export EXPENV_OPTFOLDER=$(optfolder_nightly) && cat $(launcher_template) | envsubst $(subst_launcher) > $(after_tarball_inplace)/$(optfolder_nightly)
 	export EXPENV_LAUNCHER=$(optfolder_nightly) && export EXPENV_READABLE_NAME='$(readable_nightly)' && cat $(desktop_template) | envsubst $(subst_desktop) > $(after_tarball_inplace)/$(optfolder_nightly).desktop
