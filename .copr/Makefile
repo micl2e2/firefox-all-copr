@@ -7,7 +7,7 @@
 sources := /builddir/build/SOURCES
 
 packages:
-	dnf --quiet -y install git tree gcc
+	dnf --quiet -y install git tree gcc gettext-envsubst
 
 create_source_rpm:
 	[[ $(spec) =~     esr ]] && make -f Makefile srpm_esr && echo srpm_esr
