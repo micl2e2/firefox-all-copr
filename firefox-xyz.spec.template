@@ -8,8 +8,8 @@ Summary:            ${EXPENV_PACKAGE_SUMMARY}
 
 License:            MPLv1.1 or GPLv2+ or LGPLv2+
 URL:                https://www.mozilla.org/en-US/firefox/
-Source0:            ${EXPENV_PACKAGE_NAME}-${EXPENV_PACKAGE_VERSION}.tar.xz
-Source1:            after_tarball_inplace.tar
+Source0:            after_tarball_inplace.tar
+Source1:            ${EXPENV_PACKAGE_NAME}-${EXPENV_PACKAGE_VERSION}.tar.xz
 
 BuildRequires:      chrpath
 
