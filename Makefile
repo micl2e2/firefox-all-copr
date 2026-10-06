@@ -45,6 +45,7 @@ srpm_devedition:
 
 srpm_nightly:
 	V_FF=$$(cat $(optfolder_nightly).version); curl --location --silent $(tarball_nightly) --output $(optfolder_nightly)-$${V_FF}.tar.xz
+	V_FF=$$(cat $(optfolder_nightly).version); mkdir /tmp/qweqweqwe && tar --extract --file $(optfolder_nightly)-$${V_FF}.tar.xz -C /tmp/qweqweqwe && file /tmp/qweqweqwe/firefox/firefox
 	export EXPENV_OPTFOLDER=$(optfolder_nightly) && cat $(launcher_template) | envsubst $(subst_launcher) > $(after_tarball_inplace)/$(optfolder_nightly)
 	export EXPENV_LAUNCHER=$(optfolder_nightly) && export EXPENV_READABLE_NAME='$(readable_nightly)' && cat $(desktop_template) | envsubst $(subst_desktop) > $(after_tarball_inplace)/$(optfolder_nightly).desktop
 	tar --create --file $(after_tarball_inplace).tar $(after_tarball_inplace)
