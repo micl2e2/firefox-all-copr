@@ -18,15 +18,19 @@ subst_launcher = '$${EXPENV_OPTFOLDER}'
 subst_desktop = '$${EXPENV_LAUNCHER} $${EXPENV_READABLE_NAME}'
 subst_spec = '$${EXPENV_PACKAGE_NAME} $${EXPENV_PACKAGE_VERSION} $${EXPENV_RELEASE_COUNT} $${EXPENV_PACKAGE_SUMMARY}'
 # MNOTE: V_FF should be provided immediately and temporarily
-tarball_esr := https://download-installer.cdn.mozilla.net/pub/firefox/releases/$${V_FF}/linux-$$(arch)/en-US/firefox-$${V_FF}.tar.xz
-tarball_devedition := https://download-installer.cdn.mozilla.net/pub/devedition/releases/$${V_FF}/linux-$$(arch)/en-US/firefox-$${V_FF}.tar.xz
-tarball_nightly := https://download-installer.cdn.mozilla.net/pub/firefox/nightly/latest-mozilla-central/firefox-$${V_FF}.en-US.linux-$$(arch).tar.xz
+tarball_esr_x8664 := https://download-installer.cdn.mozilla.net/pub/firefox/releases/$${V_FF}/linux-x86_64/en-US/firefox-$${V_FF}.tar.xz
+tarball_esr_aarch64 := https://download-installer.cdn.mozilla.net/pub/firefox/releases/$${V_FF}/linux-aarch64/en-US/firefox-$${V_FF}.tar.xz
+tarball_devedition_x8664 := https://download-installer.cdn.mozilla.net/pub/devedition/releases/$${V_FF}/linux-x86_64/en-US/firefox-$${V_FF}.tar.xz
+tarball_devedition_aarch64 := https://download-installer.cdn.mozilla.net/pub/devedition/releases/$${V_FF}/linux-aarch64/en-US/firefox-$${V_FF}.tar.xz
+tarball_nightly_x8664 := https://download-installer.cdn.mozilla.net/pub/firefox/nightly/latest-mozilla-central/firefox-$${V_FF}.en-US.linux-x86_64.tar.xz
+tarball_nightly_aarch64 := https://download-installer.cdn.mozilla.net/pub/firefox/nightly/latest-mozilla-central/firefox-$${V_FF}.en-US.linux-aarch64.tar.xz
 
 packages:
 	sudo dnf --quiet -y install git tree gcc
 
 srpm_esr:
-	V_FF=$$(cat $(optfolder_esr).version); curl --location --silent $(tarball_esr) --output $(optfolder_esr)-$${V_FF}.tar.xz
+	V_FF=$$(cat $(optfolder_esr).version); curl --location --silent $(tarball_esr_x8664) --output $(optfolder_esr)-$${V_FF}-x86_64.tar.xz
+	V_FF=$$(cat $(optfolder_esr).version); curl --location --silent $(tarball_esr_aarch64) --output $(optfolder_esr)-$${V_FF}-aarch64.tar.xz
 	export EXPENV_OPTFOLDER=$(optfolder_esr) && cat $(launcher_template) | envsubst $(subst_launcher) > $(after_tarball_inplace)/$(optfolder_esr) # we assume launcher name is the same as opt subfolder name
 	export EXPENV_LAUNCHER=$(optfolder_esr) && export EXPENV_READABLE_NAME='$(readable_esr)' && cat $(desktop_template) | envsubst $(subst_desktop) > $(after_tarball_inplace)/$(optfolder_esr).desktop
 	tar --create --file $(after_tarball_inplace).tar $(after_tarball_inplace)
@@ -35,7 +39,8 @@ srpm_esr:
 	rpmbuild -bs $(optfolder_esr).spec
 
 srpm_devedition:
-	V_FF=$$(cat $(optfolder_devedition).version); curl --location --silent $(tarball_devedition) --output $(optfolder_devedition)-$${V_FF}.tar.xz
+	V_FF=$$(cat $(optfolder_devedition).version); curl --location --silent $(tarball_devedition_x8664) --output $(optfolder_devedition)-$${V_FF}-x86_64.tar.xz
+	V_FF=$$(cat $(optfolder_devedition).version); curl --location --silent $(tarball_devedition_aarch64) --output $(optfolder_devedition)-$${V_FF}-aarch64.tar.xz
 	export EXPENV_OPTFOLDER=$(optfolder_devedition) && cat $(launcher_template) | envsubst $(subst_launcher) > $(after_tarball_inplace)/$(optfolder_devedition)
 	export EXPENV_LAUNCHER=$(optfolder_devedition) && export EXPENV_READABLE_NAME='$(readable_devedition)' && cat $(desktop_template) | envsubst $(subst_desktop) > $(after_tarball_inplace)/$(optfolder_devedition).desktop
 	tar --create --file $(after_tarball_inplace).tar $(after_tarball_inplace)
@@ -44,8 +49,8 @@ srpm_devedition:
 	rpmbuild -bs $(optfolder_devedition).spec
 
 srpm_nightly:
-	V_FF=$$(cat $(optfolder_nightly).version); curl --location --silent $(tarball_nightly) --output $(optfolder_nightly)-$${V_FF}.tar.xz
-	V_FF=$$(cat $(optfolder_nightly).version); mkdir /tmp/qweqweqwe && tar --extract --file $(optfolder_nightly)-$${V_FF}.tar.xz -C /tmp/qweqweqwe && file /tmp/qweqweqwe/firefox/firefox
+	V_FF=$$(cat $(optfolder_nightly).version); curl --location --silent $(tarball_nightly_x8664) --output $(optfolder_nightly)-$${V_FF}-x86_64.tar.xz
+	V_FF=$$(cat $(optfolder_nightly).version); curl --location --silent $(tarball_nightly_aarch64) --output $(optfolder_nightly)-$${V_FF}-aarch64.tar.xz
 	export EXPENV_OPTFOLDER=$(optfolder_nightly) && cat $(launcher_template) | envsubst $(subst_launcher) > $(after_tarball_inplace)/$(optfolder_nightly)
 	export EXPENV_LAUNCHER=$(optfolder_nightly) && export EXPENV_READABLE_NAME='$(readable_nightly)' && cat $(desktop_template) | envsubst $(subst_desktop) > $(after_tarball_inplace)/$(optfolder_nightly).desktop
 	tar --create --file $(after_tarball_inplace).tar $(after_tarball_inplace)
