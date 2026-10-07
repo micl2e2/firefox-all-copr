@@ -1,0 +1,78 @@
+name: Repackage on version bump
+
+on:
+  schedule:
+    # 00:00:00 UTC every day. GitHub may start the job a few minutes late.
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repackage:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:43
+    steps:
+      - name: Install host tools
+        run: dnf install -y sudo git dnf-plugins-core
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Update version files
+        run: bash try_update_version.bash
+
+      - name: Commit version bumps and trigger Copr
+        env:
+          COPR_WEBHOOK_SECRET: ${{ secrets.COPR_WEBHOOK_SECRET }}
+        run: |
+          set -eu
+          if [ -z "${COPR_WEBHOOK_SECRET}" ]
+          then
+            echo "Set the COPR_WEBHOOK_SECRET repository secret to the Copr webhook UUID."
+            exit 1
+          fi
+
+          mapfile -t changed < <(git diff --name-only)
+          if [ "${#changed[@]}" -eq 0 ]
+          then
+            echo "No version changes."
+            exit 0
+          fi
+          printf 'Changed files:\n'
+          printf '  %s\n' "${changed[@]}"
+
+          pkgs=()
+          files=()
+          for file in "${changed[@]}"
+          do
+            case "${file}" in
+              firefox-esr.version) pkgs+=(firefox-esr) ;;
+              firefox-devedition.version) pkgs+=(firefox-devedition) ;;
+              firefox-nightly.version) pkgs+=(firefox-nightly) ;;
+              *) continue ;;
+            esac
+            files+=("${file}")
+          done
+          if [ "${#pkgs[@]}" -eq 0 ]
+          then
+            echo "No edition version files changed."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${files[@]}"
+          git commit -m "Bump Firefox edition versions."
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+
+          for pkg in "${pkgs[@]}"
+          do
+            echo "Triggering ${pkg}"
+            curl --fail --silent --show-error \
+              --request POST \
+              "https://copr.fedorainfracloud.org/webhooks/custom/260936/${COPR_WEBHOOK_SECRET}/${pkg}/"
+            echo
+          done
