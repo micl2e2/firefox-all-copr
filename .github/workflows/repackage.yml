@@ -28,9 +28,9 @@ jobs:
       - name: Update version files
         run: bash try_update_version.bash
 
-      - name: Commit version bumps and trigger Copr
+      - name: Commit version bumps
+        id: versions
         env:
-          COPR_WEBHOOK_SECRET: ${{ secrets.COPR_WEBHOOK_SECRET }}
           GIT_CONFIG_COUNT: "1"
           GIT_CONFIG_KEY_0: safe.directory
           GIT_CONFIG_VALUE_0: "*"
@@ -38,16 +38,12 @@ jobs:
           set -eu
           cd "${GITHUB_WORKSPACE}"
           git rev-parse --is-inside-work-tree
-          if [ -z "${COPR_WEBHOOK_SECRET}" ]
-          then
-            echo "Set the COPR_WEBHOOK_SECRET repository secret to the Copr webhook UUID."
-            exit 1
-          fi
 
           mapfile -t changed < <(git diff --name-only)
           if [ "${#changed[@]}" -eq 0 ]
           then
             echo "No version changes."
+            echo "packages_outdated=" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
           printf 'Changed files:\n'
@@ -68,6 +64,7 @@ jobs:
           if [ "${#pkgs[@]}" -eq 0 ]
           then
             echo "No edition version files changed."
+            echo "packages_outdated=" >> "${GITHUB_OUTPUT}"
             exit 0
           fi
 
@@ -76,12 +73,28 @@ jobs:
           git add "${files[@]}"
           git commit -m "Bump Firefox edition versions."
           git push origin "HEAD:${GITHUB_REF_NAME}"
+          echo "packages_outdated=${pkgs[*]}" >> "${GITHUB_OUTPUT}"
 
-          for pkg in "${pkgs[@]}"
+      - name: Trigger Copr builds
+        if: steps.versions.outputs.packages_outdated != ''
+        run: |
+          set -eu
+          if [ -z "${COPR_WEBHOOK_SECRET}" ]
+          then
+            echo "Set the COPR_WEBHOOK_SECRET repository secret to the Copr webhook UUID."
+            exit 1
+          fi
+          for pkg in ${COPR_PACKAGES}
           do
             echo "Triggering ${pkg}"
-            curl --fail --silent --show-error \
-              --request POST \
-              "https://copr.fedorainfracloud.org/webhooks/custom/260936/${COPR_WEBHOOK_SECRET}/${pkg}/"
-            echo
+            code="$(curl --silent --output /tmp/copr-body --write-out '%{http_code}' --request POST \
+              "https://copr.fedorainfracloud.org/webhooks/custom/260936/${COPR_WEBHOOK_SECRET}/${pkg}/")"
+            echo "Copr responded ${code} for ${pkg}"
+            if [ "${code}" -lt 200 ] || [ "${code}" -ge 300 ]
+            then
+              exit 1
+            fi
           done
+        env:
+          COPR_WEBHOOK_SECRET: ${{ secrets.COPR_WEBHOOK_SECRET }}
+          COPR_PACKAGES: ${{ steps.versions.outputs.packages_outdated }}
